@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+<title>Garasi Log</title>
+<style>
+:root{--ink:#0f1b2d;--mut:#64748b;--bg:#f4f8fa;--teal:#14b8a6;--deep:#0f766e;--amb:#fbbf24;--line:#e2e8f0;--r:18px}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+body{font:15px/1.45 'Plus Jakarta Sans',system-ui,sans-serif;color:var(--ink);background:var(--bg);padding-bottom:110px}
+.wrap{max-width:560px;margin:auto;padding:16px}
+.hero{background:linear-gradient(135deg,#fff 30%,#d9f7f2 70%,#fff3cf);border:1px solid #fff;border-radius:26px;padding:20px;box-shadow:0 10px 30px #0f766e1a;overflow:hidden;position:relative}
+.hero small{color:var(--mut)}.hero h1{font-size:30px;font-weight:800;letter-spacing:-.5px}
+.hero svg{position:absolute;right:-6px;bottom:-4px;width:150px;opacity:.9}
+.card{background:#fff;border-radius:var(--r);padding:16px;margin-top:14px;box-shadow:0 4px 18px #0f1b2d0d}
+h2{font-size:16px;font-weight:800;margin-bottom:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0;scrollbar-width:none}
+.chip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:9px 15px;font:inherit;font-weight:600;white-space:nowrap;color:var(--mut)}
+.chip.on{background:var(--deep);color:#fff;border-color:var(--deep)}
+.row{display:flex;gap:8px}.row>*{flex:1}
+input,select,textarea{width:100%;font:inherit;padding:13px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+label{font-weight:600;font-size:13px;color:var(--mut);display:block;margin:10px 0 4px}
+.bars{display:flex;align-items:flex-end;gap:10px;height:130px}
+.bar{flex:1;text-align:center;font-size:11px;color:var(--mut)}
+.bar i{display:block;border-radius:8px 8px 3px 3px;background:linear-gradient(var(--teal),#99f6e4);min-height:4px;margin-bottom:4px;transition:height .5s}
+.ins{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.ins:last-child{border:0}
+.tx{display:flex;justify-content:space-between;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.tx b{display:block}.tx small{color:var(--mut)}.amt{font-weight:800;text-align:right;white-space:nowrap}
+.tx .act{font-size:12px;margin-top:4px}.act button{border:0;background:none;color:var(--deep);font-weight:600;padding:4px 8px 4px 0}.act .del{color:#dc2626}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;background:#e6faf7;color:var(--deep)}.tag.mod{background:#fff3cf;color:#a16207}
+.rem{display:flex;justify-content:space-between;padding:8px 0}.ok{color:var(--deep)}.warn{color:#dc2626;font-weight:800}
+.empty{text-align:center;color:var(--mut);padding:28px 8px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#ffffffd9;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+nav button{border:0;background:none;font:inherit;font-weight:600;color:var(--mut);padding:8px 26px}nav button.on{color:var(--deep)}
+.fab{position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom));transform:translateX(-50%);width:68px;height:68px;border-radius:50%;border:4px solid #fff;background:linear-gradient(135deg,var(--teal),var(--amb));color:#fff;font-size:34px;box-shadow:0 8px 24px #14b8a688}
+.sheet{position:fixed;inset:0;background:#0f1b2d66;display:none;align-items:flex-end;z-index:9}.sheet.open{display:flex}
+.sheet form{background:#fff;width:100%;max-width:560px;margin:auto;border-radius:26px 26px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .25s}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.save{width:100%;margin-top:16px;padding:16px;border:0;border-radius:14px;font:inherit;font-weight:800;font-size:16px;color:#fff;background:linear-gradient(135deg,var(--deep),var(--teal))}
+.save:disabled{opacity:.6}
+#toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-90px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;z-index:20;transition:.3s}#toast.show{transform:translate(-50%,0)}#toast.err{background:#dc2626}
+.sk{height:70px;border-radius:var(--r);margin-top:14px;background:linear-gradient(90deg,#e8eef2,#f6f9fb,#e8eef2);background-size:200%;animation:sk 1.2s infinite}@keyframes sk{to{background-position:-200%}}
+.hid{display:none}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<div id="toast"></div>
+<div class="wrap">
+ <section id="home">
+  <div class="hero"><small>Total pengeluaran · <span id="plabel">bulan ini</span></small><h1 id="total">Rp. 0</h1><small id="cnt"></small>
+   <svg id="veh" viewBox="0 0 200 110"></svg></div>
+  <div class="chips" id="kchips" style="margin-top:12px"></div>
+  <div class="chips" id="pchips"></div>
+  <div class="row hid" id="custom"><input type="date" id="cf"><input type="date" id="ct"></div>
+  <div id="homebody"><div class="sk"></div><div class="sk"></div></div>
+ </section>
+ <section id="hist" class="hid">
+  <h2 style="margin-top:6px">Riwayat</h2>
+  <input id="q" placeholder="Cari sparepart, merk, bengkel…">
+  <div class="chips" id="hchips"></div>
+  <div class="row"><input type="date" id="rf"><input type="date" id="rt"></div>
+  <div class="card" id="hlist"></div>
+ </section>
+</div>
+<button class="fab" id="fab" aria-label="Tambah Maintenance/Modifikasi">+</button>
+<nav><button id="n-home" class="on">Beranda</button><span style="width:70px"></span><button id="n-hist">Riwayat</button></nav>
+
+<div class="sheet" id="sheet"><form id="f" novalidate>
+ <h2 id="ftitle">Tambah Maintenance/Modifikasi</h2>
+ <div class="chips" id="fkat"></div>
+ <label>Merk / tipe kendaraan</label><input id="merk" list="merks" placeholder="mis. Honda Vario 150" autocomplete="off">
+ <label>Sparepart / pekerjaan *</label><input id="item" list="items" placeholder="mis. Oli mesin" autocomplete="off">
+ <label>Harga (Rp) *</label><input id="harga" inputmode="numeric" placeholder="150000">
+ <div class="row"><div><label>Tanggal</label><input type="date" id="tanggal"></div><div><label>KM saat ini</label><input id="km" inputmode="numeric" placeholder="opsional"></div></div>
+ <div class="chips" id="fjenis" style="margin-top:8px"></div>
+ <label>Bengkel</label><input id="bengkel" placeholder="opsional">
+ <label>Catatan</label><input id="catatan" placeholder="opsional">
+ <datalist id="merks"></datalist><datalist id="items"></datalist>
+ <button class="save" id="save">Simpan</button>
+ <button type="button" class="chip" id="cancel" style="width:100%;margin-top:8px">Batal</button>
+</form></div>
+
+<script>
+const API='GANTI_DENGAN_URL_WEB_APP_APPS_SCRIPT';
+const $=s=>document.querySelector(s),pad=n=>String(n).padStart(2,'0');
+const iso=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,today=iso(new Date());
+const rp=n=>'Rp. '+Math.round(n).toLocaleString('id-ID');
+const tg=d=>new Date(d+'T00:00').toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PER=[['hari','Hari ini'],['minggu','Minggu ini'],['bulan','Bulan ini'],['custom','Custom'],['semua','Semua']];
+const KATS=[['semua','Semua'],['motor','Motor'],['mobil','Mobil']];
+const RULES=[['oli',3,3000],['kampas',12,20000],['ban',36,40000],['servis',6,6000],['aki',24,0]]; // [kata kunci, bulan, km]
+let S={motor:[],mobil:[]},kat='semua',per='bulan',hk='semua',fk='motor',fj='Servis',editing=null,pin=localStorage.pin||'';
+const SV={motor:'<g fill="none" stroke="#0f766e" stroke-width="5" stroke-linecap="round"><circle cx="45" cy="78" r="22"/><circle cx="160" cy="78" r="22"/><path d="M45 78l40-34h40l35 34M85 44l-8-14h-14M125 44l8-12h16" stroke="#14b8a6"/></g><circle cx="105" cy="62" r="7" fill="#fbbf24"/>',
+ mobil:'<g fill="none" stroke="#0f766e" stroke-width="5" stroke-linejoin="round"><path d="M15 80v-18l20-6 28-26h62l26 26 20 6v18z" stroke="#14b8a6"/><circle cx="55" cy="82" r="14" fill="#fff"/><circle cx="150" cy="82" r="14" fill="#fff"/></g><path d="M75 36h30v20H55z" fill="#fbbf24"/>'};
+
+function toast(t,e){const x=$('#toast');x.textContent=t;x.className='show'+(e?' err':'');setTimeout(()=>x.className='',2600)}
+async function call(action,body={}){
+  if(!pin){pin=prompt('Masukkan PIN pribadi (sekali saja):')||'';localStorage.pin=pin}
+  const r=await fetch(API,{method:'POST',body:JSON.stringify({token:pin,action,...body})}),j=await r.json();
+  if(j.error==='auth'){localStorage.removeItem('pin');pin='';throw Error('PIN salah. Muat ulang dan coba lagi.')}
+  if(j.error)throw Error(j.error);return j}
+async function load(){try{S=await call('list');render()}catch(e){$('#homebody').innerHTML=`<div class="empty">Gagal memuat data.<br>${esc(e.message)}<br><br><button class="chip" onclick="load()">Coba lagi</button></div>`}}
+
+const all=()=>[...S.motor.map(x=>({...x,kat:'motor'})),...S.mobil.map(x=>({...x,kat:'mobil'}))].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)||b.id-a.id);
+function inPer(d){const n=new Date(),t=new Date(d+'T00:00');
+  if(per==='hari')return d===today;
+  if(per==='minggu'){const s=new Date(n);s.setDate(n.getDate()-((n.getDay()+6)%7));return iso(s)<=d&&d<=today}
+  if(per==='bulan')return d.slice(0,7)===today.slice(0,7);
+  if(per==='custom')return(!$('#cf').value||d>=$('#cf').value)&&(!$('#ct').value||d<=$('#ct').value);return true}
+function chips(el,list,cur,fn){el.innerHTML=list.map(([k,l])=>`<button type="button" class="chip ${k===cur?'on':''}" data-k="${k}">${l}</button>`).join('');el.onclick=e=>{const k=e.target.dataset.k;if(k)fn(k)}}
+
+function render(){
+  chips($('#kchips'),KATS,kat,k=>{kat=k;render()});chips($('#pchips'),PER,per,k=>{per=k;render()});
+  $('#custom').classList.toggle('hid',per!=='custom');$('#plabel').textContent=PER.find(p=>p[0]===per)[1].toLowerCase();
+  $('#veh').innerHTML=SV[kat==='mobil'?'mobil':'motor'];
+  const base=all().filter(x=>kat==='semua'||x.kat===kat),L=base.filter(x=>inPer(x.tanggal)),tot=L.reduce((a,x)=>a+x.harga,0);
+  $('#total').textContent=rp(tot);$('#cnt').textContent=L.length+' transaksi';
+  // grafik 6 bulan
+  const ms=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ms.push(iso(d).slice(0,7))}
+  const sums=ms.map(m=>base.filter(x=>x.tanggal.slice(0,7)===m).reduce((a,x)=>a+x.harga,0)),mx=Math.max(...sums,1);
+  // insight
+  const g={};L.forEach(x=>{const k=x.item.trim().toLowerCase();(g[k]=g[k]||{n:x.item.trim(),s:0,c:0});g[k].s+=x.harga;g[k].c++});
+  const gs=Object.values(g).sort((a,b)=>b.s-a.s),top=gs[0];
+  // pengingat
+  const rem=[];['motor','mobil'].forEach(k=>{if(kat!=='semua'&&kat!==k)return;const rows=S[k],cur=Math.max(0,...rows.map(r=>r.km));
+    RULES.forEach(([w,m,km])=>{const l=rows.filter(r=>r.item.toLowerCase().includes(w)).sort((a,b)=>b.tanggal.localeCompare(a.tanggal))[0];
+      if(!l)return;const mo=(Date.now()-new Date(l.tanggal))/2.63e9,dk=l.km&&km?cur-l.km:0,due=mo>=m||(km&&dk>=km);
+      rem.push(`<div class="rem"><span>${esc(w[0].toUpperCase()+w.slice(1))} ${S.motor.length&&S.mobil.length?'('+k+')':''}</span><span class="${due?'warn':'ok'}">${due?'Waktunya ganti':'Aman'} · ${mo.toFixed(1)} bln${km&&l.km?', '+dk.toLocaleString('id-ID')+' km':''}</span></div>`)})});
+  $('#homebody').innerHTML=!base.length?`<div class="card empty">Belum ada catatan.<br>Tekan tombol + untuk menambah.</div>`:`
+   <div class="card"><h2>Pengeluaran 6 bulan terakhir</h2><div class="bars">${sums.map((s,i)=>`<div class="bar"><i style="height:${s/mx*100}px"></i>${ms[i].slice(5)}</div>`).join('')}</div></div>
+   <div class="card"><h2>Insight</h2>${top?`<div class="ins"><span>Terbesar</span><b>${esc(top.n)} · ${rp(top.s)}</b></div>`+gs.slice(0,4).map(x=>`<div class="ins"><span>Rata-rata ${esc(x.n)}</span><b>${rp(x.s/x.c)}</b></div>`).join(''):'<div class="empty">Tidak ada data di periode ini.</div>'}</div>
+   <div class="card"><h2>Pengingat servis</h2>${rem.join('')||'<div class="empty">Pengingat muncul setelah kamu mencatat oli, kampas, ban, servis, atau aki.</div>'}</div>
+   <div class="card"><h2>Pembelian di periode ini</h2>${list(L.slice(0,8))}</div>`;
+  chips($('#hchips'),KATS,hk,k=>{hk=k;render()});
+  const q=$('#q').value.toLowerCase(),a=$('#rf').value,b=$('#rt').value;
+  $('#hlist').innerHTML=list(all().filter(x=>(hk==='semua'||x.kat===hk)&&(!a||x.tanggal>=a)&&(!b||x.tanggal<=b)&&(!q||[x.item,x.merk,x.bengkel,x.catatan].join(' ').toLowerCase().includes(q))),1);
+  $('#merks').innerHTML=[...new Set([...(JSON.parse(localStorage.merks||'[]')),...all().map(x=>x.merk).filter(Boolean)])].map(m=>`<option value="${esc(m)}">`).join('');
+  $('#items').innerHTML=['Oli mesin','Oli gardan','Kampas rem','Ban','Aki','Busi','Filter udara','Filter oli','Servis berkala','Knalpot','Velg','Lampu'].map(m=>`<option value="${m}">`).join('');
+}
+function list(L,act){return L.length?L.map(x=>`<div class="tx"><div><b>${esc(x.item)}</b><small>${tg(x.tanggal)} · ${esc(x.merk||x.kat)}${x.km?' · '+x.km.toLocaleString('id-ID')+' km':''}${x.bengkel?' · '+esc(x.bengkel):''}</small>
+ <div class="act"><span class="tag ${x.jenis==='Modifikasi'?'mod':''}">${esc(x.jenis||x.kat)}</span> ${act?`<button data-e="${x.kat}:${x.id}">Edit</button><button class="del" data-d="${x.kat}:${x.id}">Hapus</button>`:''}</div></div><div class="amt">${rp(x.harga)}</div></div>`).join(''):'<div class="empty">Tidak ada transaksi yang cocok.</div>'}
+
+function openForm(x){editing=x||null;fk=x?x.kat:(kat==='mobil'?'mobil':'motor');fj=x?.jenis||'Servis';
+  $('#ftitle').textContent=x?'Edit catatan':'Tambah Maintenance/Modifikasi';drawF();
+  ['merk','item','harga','km','bengkel','catatan'].forEach(k=>$('#'+k).value=x?(x[k]||''):'');
+  $('#tanggal').value=x?x.tanggal:today;if(!x)$('#merk').value=localStorage['m_'+fk]||'';
+  $('#sheet').classList.add('open');setTimeout(()=>$('#item').focus(),250)}
+function drawF(){chips($('#fkat'),[['motor','Motor'],['mobil','Mobil']],fk,k=>{if(editing)return;fk=k;$('#merk').value=localStorage['m_'+k]||'';drawF()});
+  chips($('#fjenis'),[['Servis','Servis'],['Modifikasi','Modifikasi']],fj,k=>{fj=k;drawF()})}
+const close=()=>$('#sheet').classList.remove('open');
+$('#fab').onclick=()=>openForm();$('#cancel').onclick=close;$('#sheet').onclick=e=>{if(e.target.id==='sheet')close()};
+$('#f').onsubmit=async e=>{e.preventDefault();
+  const h=Number($('#harga').value.replace(/[^\d]/g,'')),it=$('#item').value.trim();
+  if(!it)return toast('Isi nama sparepart atau pekerjaan',1);
+  if(!(h>0))return toast('Harga harus lebih dari 0',1);
+  const data={tanggal:$('#tanggal').value||today,merk:$('#merk').value.trim(),item:it,harga:h,jenis:fj,km:$('#km').value.replace(/[^\d]/g,''),bengkel:$('#bengkel').value.trim(),catatan:$('#catatan').value.trim()};
+  $('#save').disabled=true;$('#save').textContent='Menyimpan…';
+  try{await call(editing?'edit':'add',{kat:fk,row:editing?.id,data});
+    if(data.merk){localStorage['m_'+fk]=data.merk;const m=new Set(JSON.parse(localStorage.merks||'[]'));m.add(data.merk);localStorage.merks=JSON.stringify([...m])}
+    close();toast('Tersimpan ke spreadsheet');await load()}catch(er){toast('Gagal menyimpan: '+er.message,1)}
+  $('#save').disabled=false;$('#save').textContent='Simpan'};
+$('#hlist').onclick=async e=>{const d=e.target.dataset;
+  if(d.e){const[k,id]=d.e.split(':');openForm({...S[k].find(r=>r.id==id),kat:k})}
+  if(d.d){const[k,id]=d.d.split(':'),r=S[k].find(r=>r.id==id);
+    if(confirm(`Hapus "${r.item}" (${rp(r.harga)})? Baris di spreadsheet akan dihapus permanen.`)){
+      try{await call('delete',{kat:k,row:r.id});toast('Dihapus');await load()}catch(er){toast('Gagal menghapus: '+er.message,1)}}}};
+['q','rf','rt','cf','ct'].forEach(i=>$('#'+i).oninput=render);
+function go(h){$('#home').classList.toggle('hid',h);$('#hist').classList.toggle('hid',!h);$('#n-home').classList.toggle('on',!h);$('#n-hist').classList.toggle('on',h)}
+$('#n-home').onclick=()=>go(0);$('#n-hist').onclick=()=>go(1);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+render();load();
+</script></body></html>
