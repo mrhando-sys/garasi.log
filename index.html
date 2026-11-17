@@ -97,10 +97,11 @@ const SV={motor:'<g fill="none" stroke="#0f766e" stroke-width="5" stroke-linecap
  mobil:'<g fill="none" stroke="#0f766e" stroke-width="5" stroke-linejoin="round"><path d="M15 80v-18l20-6 28-26h62l26 26 20 6v18z" stroke="#14b8a6"/><circle cx="55" cy="82" r="14" fill="#fff"/><circle cx="150" cy="82" r="14" fill="#fff"/></g><path d="M75 36h30v20H55z" fill="#fbbf24"/>'};
 
 function toast(t,e){const x=$('#toast');x.textContent=t;x.className='show'+(e?' err':'');setTimeout(()=>x.className='',2600)}
-async function call(action,body={}){
-  if(!pin){pin=prompt('Masukkan PIN pribadi (sekali saja):')||'';localStorage.pin=pin}
+async function call(action,body={},retry){
   const r=await fetch(API,{method:'POST',body:JSON.stringify({token:pin,action,...body})}),j=await r.json();
-  if(j.error==='auth'){localStorage.removeItem('pin');pin='';throw Error('PIN salah. Muat ulang dan coba lagi.')}
+  if(j.error==='auth'){localStorage.removeItem('pin');pin='';
+    if(retry)throw Error('PIN salah. Muat ulang dan coba lagi.');
+    pin=prompt('Masukkan PIN:')||'';localStorage.pin=pin;return call(action,body,1)}
   if(j.error)throw Error(j.error);return j}
 async function load(){try{S=await call('list');render()}catch(e){$('#homebody').innerHTML=`<div class="empty">Gagal memuat data.<br>${esc(e.message)}<br><br><button class="chip" onclick="load()">Coba lagi</button></div>`}}
 
