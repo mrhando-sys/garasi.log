@@ -45,12 +45,13 @@ nav .gap{flex:0 0 84px}
 #toast{position:fixed;top:14px;left:50%;transform:translate(-50%,-90px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;z-index:20;transition:.3s}#toast.show{transform:translate(-50%,0)}#toast.err{background:#dc2626}
 .sk{height:70px;border-radius:var(--r);margin-top:14px;background:linear-gradient(90deg,#e8eef2,#f6f9fb,#e8eef2);background-size:200%;animation:sk 1.2s infinite}@keyframes sk{to{background-position:-200%}}
 .hid{display:none}@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.rl{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#ffffffb0;backdrop-filter:blur(8px);font-size:20px;color:var(--deep);z-index:2}.rl.spin{animation:sp .8s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
 </style></head><body>
 <div id="toast"></div>
 <div class="wrap">
  <section id="home">
   <div class="hero"><small>Total pengeluaran · <span id="plabel">bulan ini</span></small><h1 id="total">Rp. 0</h1><small id="cnt"></small>
-   <svg id="veh" viewBox="0 0 200 110"></svg></div>
+   <button class="rl" id="reload" aria-label="Muat ulang data">↻</button><svg id="veh" viewBox="0 0 200 110"></svg></div>
   <div class="chips" id="kchips" style="margin-top:12px"></div>
   <div class="chips" id="pchips"></div>
   <div class="row hid" id="custom"><input type="date" id="cf"><input type="date" id="ct"></div>
@@ -103,7 +104,7 @@ async function call(action,body={},retry){
     if(retry)throw Error('PIN salah. Muat ulang dan coba lagi.');
     pin=prompt('Masukkan PIN:')||'';localStorage.pin=pin;return call(action,body,1)}
   if(j.error)throw Error(j.error);return j}
-async function load(){try{S=await call('list');render()}catch(e){$('#homebody').innerHTML=`<div class="empty">Gagal memuat data.<br>${esc(e.message)}<br><br><button class="chip" onclick="load()">Coba lagi</button></div>`}}
+async function load(){const rl=$('#reload');rl.classList.add('spin');try{S=await call('list');render()}catch(e){$('#homebody').innerHTML=`<div class="empty">Gagal memuat data.<br>${esc(e.message)}<br><br><button class="chip" onclick="load()">Coba lagi</button></div>`}finally{rl.classList.remove('spin')}}
 
 const all=()=>[...S.motor.map(x=>({...x,kat:'motor'})),...S.mobil.map(x=>({...x,kat:'mobil'}))].sort((a,b)=>b.tanggal.localeCompare(a.tanggal)||b.id-a.id);
 function inPer(d){const n=new Date(),t=new Date(d+'T00:00');
@@ -126,10 +127,12 @@ function render(){
   const g={};L.forEach(x=>{const k=x.item.trim().toLowerCase();(g[k]=g[k]||{n:x.item.trim(),s:0,c:0});g[k].s+=x.harga;g[k].c++});
   const gs=Object.values(g).sort((a,b)=>b.s-a.s),top=gs[0];
   // pengingat
-  const rem=[];['motor','mobil'].forEach(k=>{if(kat!=='semua'&&kat!==k)return;const rows=S[k],cur=Math.max(0,...rows.map(r=>r.km));
-    RULES.forEach(([w,m,km])=>{const l=rows.filter(r=>r.item.toLowerCase().includes(w)).sort((a,b)=>b.tanggal.localeCompare(a.tanggal))[0];
-      if(!l)return;const mo=(Date.now()-new Date(l.tanggal))/2.63e9,dk=l.km&&km?cur-l.km:0,due=mo>=m||(km&&dk>=km);
-      rem.push(`<div class="rem"><span>${esc(w[0].toUpperCase()+w.slice(1))} ${S.motor.length&&S.mobil.length?'('+k+')':''}</span><span class="${due?'warn':'ok'}">${due?'Waktunya ganti':'Aman'} · ${mo.toFixed(1)} bln${km&&l.km?', '+dk.toLocaleString('id-ID')+' km':''}</span></div>`)})});
+  const rem=[];['motor','mobil'].forEach(k=>{if(kat!=='semua'&&kat!==k)return;
+    const gm={};S[k].forEach(r=>{const n=(r.merk||'').trim()||(k==='motor'?'Motor':'Mobil'),i=n.toLowerCase();(gm[i]=gm[i]||{n,rows:[]}).rows.push(r)});
+    Object.values(gm).forEach(({n,rows})=>{const cur=Math.max(0,...rows.map(r=>r.km));
+      RULES.forEach(([w,m,km])=>{const l=rows.filter(r=>r.item.toLowerCase().includes(w)).sort((a,b)=>b.tanggal.localeCompare(a.tanggal))[0];
+        if(!l)return;const mo=(Date.now()-new Date(l.tanggal))/2.63e9,dk=l.km&&km?cur-l.km:0,due=mo>=m||(km&&l.km&&dk>=km);
+        rem.push(`<div class="rem"><span>${esc(w[0].toUpperCase()+w.slice(1))}<br><small style="color:var(--mut)">${esc(n)}</small></span><span class="${due?'warn':'ok'}" style="text-align:right">${due?'Waktunya ganti':'Aman'}<br><small>${mo.toFixed(1)} bln${km&&l.km?' · '+dk.toLocaleString('id-ID')+' km':''}</small></span></div>`)})})});
   $('#homebody').innerHTML=!base.length?`<div class="card empty">Belum ada catatan.<br>Tekan tombol + untuk menambah.</div>`:`
    <div class="card"><h2>Pengeluaran 6 bulan terakhir</h2><div class="bars">${sums.map((s,i)=>`<div class="bar"><i style="height:${s/mx*100}px"></i>${ms[i].slice(5)}</div>`).join('')}</div></div>
    <div class="card"><h2>Insight</h2>${top?`<div class="ins"><span>Terbesar</span><b>${esc(top.n)} · ${rp(top.s)}</b></div>`+gs.slice(0,4).map(x=>`<div class="ins"><span>Rata-rata ${esc(x.n)}</span><b>${rp(x.s/x.c)}</b></div>`).join(''):'<div class="empty">Tidak ada data di periode ini.</div>'}</div>
@@ -172,5 +175,7 @@ $('#hlist').onclick=async e=>{const d=e.target.dataset;
 function go(h){$('#home').classList.toggle('hid',h);$('#hist').classList.toggle('hid',!h);$('#n-home').classList.toggle('on',!h);$('#n-hist').classList.toggle('on',h)}
 $('#n-home').onclick=()=>go(0);$('#n-hist').onclick=()=>go(1);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+$('#reload').onclick=async()=>{await load();toast('Data diperbarui')};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 render();load();
 </script></body></html>
