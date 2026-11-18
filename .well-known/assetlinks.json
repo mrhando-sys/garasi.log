@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.mrhando.garasilog",
+        "sha256_cert_fingerprints": ["59:60:2B:B9:4A:EA:38:16:EB:C4:62:75:7D:B4:C4:A8:F0:24:6C:C4:FE:A7:CE:47:C4:90:14:18:AD:68:9A:F0"]
+      }
+    }]
